@@ -1,4 +1,4 @@
-THE ENTIRE PROJECT FILE IS HERE :- 
+THE ENTIRE PROJECT FILE IS HERE :- https://drive.google.com/file/d/1qw1jkX_g-bIFUFBptdG1xC9G6nVzrOda/view?usp=sharing
 DOWNLOAD IT AND INSTALL ALL THE DEPENDANCIES FROM requirements.txt file
 
 # FixMySpot — AI Coding Instructions
