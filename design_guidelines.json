@@ -1,0 +1,89 @@
+{
+  "project_name": "Fix My Spot",
+  "domain": "Civic Engagement / Community Utility",
+  "theme": "LIGHT",
+  "archetype": "1 (Organic & Earthy)",
+  "design_rationale": "Citizens need trust, clarity, and approachability. A light theme with organic, earthy tones prevents the platform from feeling like a cold corporate tool or an intimidating government portal. The design prioritizes high contrast for elderly accessibility and a gamified, optimistic visual tone.",
+  "colors": {
+    "background": "#FAFAF9",
+    "surface": "#FFFFFF",
+    "primary": "#166534",
+    "primary_hover": "#14532D",
+    "secondary": "#E7E5E4",
+    "secondary_hover": "#D6D3D1",
+    "accent_alert": "#C53030",
+    "accent_pending": "#D97706",
+    "accent_resolved": "#0369A1",
+    "text_main": "#1C1917",
+    "text_muted": "#57534E",
+    "border": "#E7E5E4"
+  },
+  "typography": {
+    "heading_font": "Outfit",
+    "body_font": "Work Sans",
+    "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tight font-bold text-stone-900",
+    "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight font-semibold text-stone-900",
+    "h3": "text-xl sm:text-2xl font-medium text-stone-900",
+    "body": "text-base leading-relaxed text-stone-800",
+    "small": "text-sm uppercase tracking-[0.2em] font-medium text-stone-500"
+  },
+  "spacing_and_layout": {
+    "general_philosophy": "Generous spacing. Containers with borders must use p-6 or p-8 internal padding.",
+    "marketing_grid": "grid-cols-1 md:grid-cols-12 gap-8. Asymmetrical spans. Hero: col-span-full md:col-span-8 row-span-2.",
+    "dashboard_grid": "grid-cols-1 md:grid-cols-4 gap-6. Dense, utilized pixels. Primary charts span 2-3 columns.",
+    "image_constraints": "max-h-[80vh] object-cover rounded-xl"
+  },
+  "surfaces": {
+    "header": "Solid Background (bg-white) with a hard bottom border (border-stone-200). z-50 sticky.",
+    "cards": "Flat background (bg-white), 1px subtle border (border-stone-200), no shadow by default. Hover: shadow-md -translate-y-1 transition-all duration-200.",
+    "buttons": "Flat, sharp padding (px-6 py-3). Primary buttons use #166534 (Deep Forest Green) bg and white text. Hover state explicitly defined."
+  },
+  "interactions": {
+    "hover_states": "Must explicitly set text color on hover. e.g., hover:bg-stone-100 hover:text-stone-900",
+    "focus_states": "High contrast ring. focus:ring-2 focus:ring-primary focus:outline-none",
+    "animations": "Subtle, reduced motion supported. transition-all duration-200 ease-out."
+  },
+  "components": {
+    "forms": "Shadcn/UI heavily customized with Work Sans body and generous p-4 inputs.",
+    "map": "Leaflet.js integrated inside a Shadcn Card. No full-bleed map to avoid scroll-trapping.",
+    "voice_reporting": "Prominent floating action button or large inline block with a microphone icon, pulsing animation when active.",
+    "gamification": "Phosphor Icons (Duotone) combined with accent colors for badges (Gold/Amber, Silver/Stone, Bronze/Terracotta).",
+    "multi_language": "Shadcn DropdownMenu in the top right nav."
+  },
+  "media": {
+    "icons_library": "@phosphor-icons/react",
+    "images": {
+      "hero_illustration": {
+        "url": "https://static.prod-images.emergentagent.com/jobs/a272f318-cdc0-49f7-846e-3b243bae3c5c/images/080181939239e1afc47fbe4d7394397d5ef47579b513f17586ef5bd79ca6963b.png",
+        "description": "Wide-angle vector illustration of a clean, modern eco-friendly city. Used for Citizen Portal Landing Page."
+      },
+      "pothole_example_1": {
+        "url": "https://images.unsplash.com/photo-1765300013135-e047e42de2ea?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzJ8MHwxfHNlYXJjaHwyfHxjaXR5JTIwc3RyZWV0JTIwcG90aG9sZXxlbnwwfHx8fDE3NzU5MDQwMDl8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Empty street lit by streetlights at night, showing road conditions."
+      },
+      "pothole_example_2": {
+        "url": "https://images.unsplash.com/photo-1560782202-154b39d57ef2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTN8MHwxfHNlYXJjaHwxfHxjaXR5JTIwc3RyZWV0JTIwcG90aG9sZXxlbnwwfHx8fDE3NzU5MDQwMDl8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Body of water on road (pothole issue)."
+      },
+      "community_happy": {
+        "url": "https://images.unsplash.com/photo-1772724317387-7e763804b637?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTN8MHwxfHNlYXJjaHwyfHxoYXBweSUyMGNvbW11bml0eSUyMHVyYmFufGVufDB8fHx8MTc3NTkwNDAwOXww&ixlib=rb-4.1.0&q=85",
+        "description": "Three friends laughing together outdoors. Used for gamification/success states."
+      }
+    }
+  },
+  "accessibility_and_testing": {
+    "data_testid": "MANDATORY on all interactive elements (buttons, inputs, links). Format: kebab-case, role-based.",
+    "contrast": "Ensure all text meets APCA/WCAG AA minimums. No low-contrast grey-on-grey."
+  },
+  "instructions_to_main_agent": [
+    "Use pure HTML + Tailwind for the marketing landing page (no Shadcn containers, raw divs for asymmetry).",
+    "Use Shadcn components for the citizen portal and municipal dashboard (Forms, Tables, Tabs, Select).",
+    "Integrate Leaflet.js (`react-leaflet`) for the map interface. Ensure the map tiles load smoothly and pins use the defined accent colors.",
+    "Implement Google Login and JWT standard forms.",
+    "For the voice reporting, use a clear visual indicator (e.g., a pulsating microphone icon).",
+    "Multi-language selector should be globally available in the header.",
+    "Do not use generic placeholder text or dummy images. Use the provided Unsplash and generated image URLs.",
+    "Ensure `data-testid` is added to every form submission button, nav link, and issue card.",
+    "Install `@phosphor-icons/react` for icons."
+  ]
+}
