@@ -32,7 +32,7 @@ export const AnalyticsPage = () => {
         axios.get(`${BACKEND_URL}/api/issues`, { withCredentials: true }),
         axios.get(`${BACKEND_URL}/api/gamification/leaderboard`, { withCredentials: true })
       ]);
-      
+
       setIssues(issuesRes.data);
       setUsers(leaderboardRes.data);
       calculateAnalytics(issuesRes.data);
@@ -66,12 +66,12 @@ export const AnalyticsPage = () => {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
-      
+
       const count = issuesData.filter(issue => {
         const issueDate = new Date(issue.created_at).toISOString().split('T')[0];
         return issueDate === dateStr;
       }).length;
-      
+
       last7Days.push({
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         issues: count
@@ -114,13 +114,13 @@ export const AnalyticsPage = () => {
   const exportToPDF = () => {
     if (!analytics) return;
     const doc = new jsPDF();
-    
+
     // Title
     doc.setFontSize(20);
     doc.text('FIX MY SPOT - Municipal Analytics & Complaint Audit Report', 14, 20);
     doc.setFontSize(10);
     doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
-    
+
     // Summary stats
     doc.setFontSize(14);
     doc.text('Summary Statistics', 14, 40);
@@ -129,7 +129,7 @@ export const AnalyticsPage = () => {
     doc.text(`Resolution Rate: ${analytics.resolutionRate}%`, 14, 54);
     doc.text(`Avg Resolution Time: ${analytics.avgResolutionTime} days`, 14, 60);
     doc.text(`Active Users: ${analytics.totalUsers}`, 14, 66);
-    
+
     // Issues table
     autoTable(doc, {
       startY: 75,
@@ -145,7 +145,7 @@ export const AnalyticsPage = () => {
       styles: { fontSize: 8 },
       headStyles: { fillColor: [22, 101, 52] }
     });
-    
+
     doc.save('fix-my-spot-analytics-report.pdf');
     toast.success('PDF report exported successfully!');
   };
@@ -162,7 +162,7 @@ export const AnalyticsPage = () => {
       issue.created_by_name,
       issue.history ? issue.history.length : 1
     ]);
-    
+
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
@@ -177,7 +177,7 @@ export const AnalyticsPage = () => {
   return (
     <div className="min-h-screen bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 transition-colors duration-200">
       <Navbar />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10" data-testid="analytics-page">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>

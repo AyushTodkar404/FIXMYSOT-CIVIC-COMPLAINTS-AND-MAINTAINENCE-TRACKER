@@ -16,7 +16,7 @@ export const StatusUpdateModal = ({ issue, onClose, onSuccess }) => {
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
   const requiresProof = useMemo(() => ['Work Completed', 'Citizen Verification Pending', 'Closed', 'resolved', 'resolved'].includes(status), [status]);
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length + afterPhotos.length > 5) {
       toast.error('Maximum 5 proof images allowed');

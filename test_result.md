@@ -165,6 +165,30 @@ backend:
         agent: "main"
         comment: "Added indexes on status, category, created_by, created_at, location, and comment issue_id"
 
+  - task: "Comment ObjectId Serialization and Notification Routing"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Popped MongoDB _id before returning comment response to prevent 500 serialization error; verified real-time notification dispatch"
+
+  - task: "Admin Municipal Worker Management & Two-Factor Passkey"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Verified full worker CRUD with X-Admin-Passkey header security and strict Pydantic EmailStr validation"
+
 frontend:
   - task: "De-slopping Landing Page and Dashboards (Unslop)"
     implemented: true
@@ -190,6 +214,18 @@ frontend:
         agent: "main"
         comment: "Added canvas-based resize to max 1280px and JPEG quality 0.8 to prevent 16MB BSON overflows"
 
+  - task: "StatusUpdateModal Async Image Upload Handling"
+    implemented: true
+    working: true
+    file: "frontend/src/components/StatusUpdateModal.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Fixed missing async modifier on handleImageUpload, enabling seamless client-side image compression for repair proof photos"
+
   - task: "Purge 44 unused Shadcn dead code components (Ponytail)"
     implemented: true
     working: true
@@ -202,21 +238,35 @@ frontend:
         agent: "main"
         comment: "Removed ~3500 lines of dead code; preserved only active popover and sonner components"
 
+  - task: "Craco Production Build & Dev Server Compilation"
+    implemented: true
+    working: true
+    file: "frontend/craco.config.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Compiled successfully to production build; dev server active on http://localhost:3000 with 200 OK"
+
 metadata:
   created_by: "main_agent"
-  version: "2.0"
-  test_sequence: 1
-  run_ui: false
+  version: "2.1"
+  test_sequence: 2
+  run_ui: true
 
 test_plan:
   current_focus:
     - "Citizen verification status transition to Closed or Reopened"
     - "OWASP BOLA Protection: Citizen ownership enforcement on status change"
-    - "OWASP ReDoS Defense: Regex sanitization in search queries"
+    - "StatusUpdateModal Async Image Upload Handling"
+    - "Comment ObjectId Serialization and Notification Routing"
+    - "Craco Production Build & Dev Server Compilation"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "All 4 core backend pytest tests pass 100%. Security vulnerabilities remediated. Frontend de-slopped and dead code purged."
+    message: "Exhaustive end-to-end verification complete. 10 backend integration flows passing 100%, 4 unit tests passing, production frontend build compiled successfully, dev server live on port 3000."

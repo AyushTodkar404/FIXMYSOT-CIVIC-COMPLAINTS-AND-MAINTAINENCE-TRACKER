@@ -993,6 +993,7 @@ async def create_comment(issue_id: str, comment: CommentCreate, current_user: di
             current_user["name"],
         )
     
+    comment_doc.pop("_id", None)
     return {
         **comment_doc,
         "created_at": comment_doc["created_at"].isoformat()
