@@ -71,6 +71,14 @@ export const offlineCache = {
     } catch {
       // LocalStorage full or quota exceeded, fail silently
     }
+  },
+
+  remove: (key) => {
+    try {
+      localStorage.removeItem(`fms_cache_${key}`);
+    } catch {
+      // Ignore storage errors
+    }
   }
 };
 

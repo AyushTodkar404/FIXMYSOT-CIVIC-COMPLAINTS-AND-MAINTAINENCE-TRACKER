@@ -178,3 +178,49 @@ async def test_search_sanitization_escapes_special_regex_characters(monkeypatch)
     regex_used = captured_query["$or"][0]["title"]["$regex"]
     assert r"\(" in regex_used
     assert r"\+" in regex_used
+
+
+@pytest.mark.asyncio
+async def test_health_check_endpoint(monkeypatch):
+    """Verify that /api/health queries Atlas admin ping and returns operational status."""
+    fake_client = SimpleNamespace(
+        admin=SimpleNamespace(
+            command=AsyncMock(return_value={"ok": 1})
+        )
+    )
+    monkeypatch.setattr(server, "client", fake_client)
+    res = await server.health_check()
+    assert res["status"] == "healthy"
+    assert res["database"] == "connected"
+    assert res["cluster"] == "MongoDB Atlas Cloud"
+    assert "latency_ms" in res
+    assert res["latency_ms"] >= 0
+
+
+@pytest.mark.asyncio
+async def test_database_diagnostics_staff_authorization(monkeypatch):
+    """Staff roles (admin/municipal) can read DB diagnostics; citizens are forbidden."""
+    fake_db = SimpleNamespace(
+        command=AsyncMock(return_value={
+            "db": "fixmyspot",
+            "collections": 6,
+            "objects": 94,
+            "dataSize": 9600000,
+            "storageSize": 18000000,
+            "indexes": 22,
+            "indexSize": 745000,
+        })
+    )
+    monkeypatch.setattr(server, "db", fake_db)
+
+    # 1. Citizen is denied
+    with pytest.raises(HTTPException) as exc_info:
+        await server.database_diagnostics(current_user={"id": "citizen-1", "role": "citizen"})
+    assert exc_info.value.status_code == 403
+
+    # 2. Admin is allowed
+    admin_diag = await server.database_diagnostics(current_user={"id": "admin-1", "role": "admin"})
+    assert admin_diag["status"] == "operational"
+    assert admin_diag["collections"] == 6
+    assert admin_diag["total_indexes"] == 22
+

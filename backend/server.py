@@ -15,6 +15,7 @@ from bson import ObjectId
 from pymongo.errors import PyMongoError
 import os
 import logging
+import time
 import bcrypt
 import jwt
 import secrets
@@ -24,13 +25,18 @@ import re
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
-# Bound database waits so a transient Atlas/DNS outage never leaves browser
-# requests spinning indefinitely.
+# Robust Atlas cloud connection pool with recycled sockets and fast replica failover
 client = AsyncIOMotorClient(
     mongo_url,
     serverSelectionTimeoutMS=8000,
     connectTimeoutMS=8000,
     socketTimeoutMS=15000,
+    maxPoolSize=50,
+    minPoolSize=5,
+    maxIdleTimeMS=45000,
+    waitQueueTimeoutMS=5000,
+    retryReads=True,
+    retryWrites=True,
 )
 db = client[os.environ['DB_NAME']]
 
@@ -1190,6 +1196,51 @@ async def get_categories():
         {"id": "other", "name": "Other", "icon": "DotsThree"}
     ]
 
+# ==================== SYSTEM & DATABASE HEALTH ====================
+@api_router.get("/health")
+async def health_check():
+    """Verify backend health and live MongoDB Atlas Cloud connectivity."""
+    t0 = time.perf_counter()
+    try:
+        await client.admin.command("ping")
+        latency_ms = round((time.perf_counter() - t0) * 1000, 2)
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "cluster": "MongoDB Atlas Cloud",
+            "latency_ms": latency_ms,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Atlas health check failed: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail={"status": "unhealthy", "database": "disconnected", "error": str(e)}
+        )
+
+@api_router.get("/health/db")
+async def database_diagnostics(current_user: dict = Depends(get_current_user)):
+    """Deep database diagnostics reporting collection statistics and index coverage."""
+    if current_user.get("role") not in ["admin", "municipal"]:
+        raise HTTPException(status_code=403, detail="Staff access required")
+    try:
+        t0 = time.perf_counter()
+        stats = await db.command("dbStats")
+        latency_ms = round((time.perf_counter() - t0) * 1000, 2)
+        return {
+            "database": stats.get("db"),
+            "collections": stats.get("collections"),
+            "documents": stats.get("objects"),
+            "data_size_kb": round(stats.get("dataSize", 0) / 1024, 2),
+            "storage_size_kb": round(stats.get("storageSize", 0) / 1024, 2),
+            "total_indexes": stats.get("indexes"),
+            "index_size_kb": round(stats.get("indexSize", 0) / 1024, 2),
+            "ping_latency_ms": latency_ms,
+            "status": "operational"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database diagnostic query failed: {str(e)}")
+
 # ==================== ADMIN SEEDING & DATABASE INITIALIZATION ====================
 async def init_db_and_admin():
     import uuid
@@ -1218,7 +1269,9 @@ async def init_db_and_admin():
         # Create/verify database indexes
         await db.users.create_index("email", unique=True)
         await db.users.create_index("role")
+        await db.users.create_index([("role", 1), ("points", -1)])
         await db.login_attempts.create_index("identifier")
+        await db.login_attempts.create_index("created_at", expireAfterSeconds=86400)
         await db.notifications.create_index([("user_id", 1), ("created_at", -1)])
         await db.notifications.create_index([("user_id", 1), ("read", 1)])
         
@@ -1226,7 +1279,9 @@ async def init_db_and_admin():
         await db.issues.create_index("status")
         await db.issues.create_index("category")
         await db.issues.create_index("created_by")
+        await db.issues.create_index("assigned_to")
         await db.issues.create_index([("created_at", -1)])
+        await db.issues.create_index([("status", 1), ("category", 1), ("created_at", -1)])
         await db.issues.create_index([("location.lat", 1), ("location.lng", 1)])
         await db.comments.create_index("issue_id")
         await db.comments.create_index([("issue_id", 1), ("created_at", -1)])
