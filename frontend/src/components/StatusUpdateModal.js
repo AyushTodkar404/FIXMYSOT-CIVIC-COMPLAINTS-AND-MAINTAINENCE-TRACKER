@@ -39,7 +39,13 @@ export const StatusUpdateModal = ({ issue, onClose, onSuccess }) => {
           reader.onload = (event) => {
             const img = new Image();
             img.onload = () => {
-              const maxDim = 1280;
+              const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+              const isWeak = navigator.onLine === false ||
+                ['slow-2g', '2g', '3g'].includes(conn?.effectiveType) ||
+                conn?.saveData;
+              const maxDim = isWeak ? 900 : 1280;
+              const quality = isWeak ? 0.65 : 0.8;
+
               let { width, height } = img;
               if (width > height && width > maxDim) {
                 height = Math.round((height * maxDim) / width);
@@ -52,7 +58,7 @@ export const StatusUpdateModal = ({ issue, onClose, onSuccess }) => {
               canvas.width = width;
               canvas.height = height;
               canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-              resolve(canvas.toDataURL('image/jpeg', 0.8));
+              resolve(canvas.toDataURL('image/jpeg', quality));
             };
             img.onerror = reject;
             img.src = event.target.result;
@@ -232,10 +238,22 @@ export const StatusUpdateModal = ({ issue, onClose, onSuccess }) => {
             <label className="block text-xs font-extrabold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-2">
               Completion Proof Images (After Photos)
             </label>
-            <div className="flex items-center space-x-2 mb-2">
-              <label className="cursor-pointer px-2.5 py-1.5 bg-stone-50 dark:bg-stone-950 border border-stone-250 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-900 font-bold text-[10px] rounded-lg transition-all duration-200 flex items-center space-x-1.5">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <label className="cursor-pointer px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 font-bold text-[10px] rounded-lg transition-all duration-200 flex items-center space-x-1.5">
                 <PhosphorIcons.Camera size={12} weight="bold" />
-                <span>Upload</span>
+                <span>Snap Camera</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  data-testid="after-camera-upload"
+                />
+              </label>
+              <label className="cursor-pointer px-2.5 py-1.5 bg-stone-50 dark:bg-stone-950 border border-stone-250 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-900 font-bold text-[10px] rounded-lg transition-all duration-200 flex items-center space-x-1.5">
+                <PhosphorIcons.Image size={12} weight="bold" />
+                <span>Choose File</span>
                 <input
                   type="file"
                   multiple

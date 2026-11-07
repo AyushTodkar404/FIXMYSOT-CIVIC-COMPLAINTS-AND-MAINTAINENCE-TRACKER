@@ -193,3 +193,41 @@ code {
 .animate-fade-in {
     animation: fade-in 0.6s ease-out forwards;
 }
+
+/* ==========================================================================
+   CROSS-DEVICE ERGONOMICS (Android, iOS, Windows, Tablets, Desktops)
+   ========================================================================== */
+
+/* Prevent iOS Safari 300ms tap delay and ugly grey tap highlight boxes on Android & iOS */
+html {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure smooth touch inertial scrolling on iOS WebKit */
+* {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Respect hardware safe area insets (iPhone Dynamic Island, Home Indicator, Android camera cutouts) */
+body {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Crucial iOS Safari fix: inputs smaller than 16px force Safari to auto-zoom in,
+   disorienting mobile users. Setting min 16px on mobile prevents automatic viewport zooming. */
+@media screen and (max-width: 768px) {
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* Full height viewport handling accounting for mobile browser navigation bars (dvh) */
+.min-h-screen-safe {
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+

@@ -7,6 +7,7 @@ import * as PhosphorIcons from '@phosphor-icons/react';
 import { Navbar } from '../components/Navbar';
 import { StatusBadge } from '../components/StatusBadge';
 import { VerticalTimeline } from '../components/VerticalTimeline';
+import { offlineCache } from '../lib/networkResilience';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -35,15 +36,26 @@ export const CitizenDashboard = () => {
   const fetchData = async () => {
     try {
       const [issuesRes, statsRes] = await Promise.all([
-        axios.get(`${BACKEND_URL}/api/issues`, { withCredentials: true, timeout: 12000 }),
-        axios.get(`${BACKEND_URL}/api/gamification/my-stats`, { withCredentials: true, timeout: 12000 })
+        axios.get(`${BACKEND_URL}/api/issues`, { withCredentials: true }),
+        axios.get(`${BACKEND_URL}/api/gamification/my-stats`, { withCredentials: true })
       ]);
       setIssues(issuesRes.data);
       setStats(statsRes.data);
+      offlineCache.set('citizen_issues', issuesRes.data);
+      offlineCache.set('citizen_stats', statsRes.data);
+      setLoadError('');
       await refreshUser();
     } catch (error) {
-      console.error('Failed to fetch data:', error);
-      setLoadError('We could not load community issues right now. Please refresh in a moment.');
+      console.warn('Network issue encountered, attempting offline cache recovery:', error);
+      const cachedIssues = offlineCache.get('citizen_issues');
+      const cachedStats = offlineCache.get('citizen_stats');
+      if (cachedIssues) {
+        setIssues(cachedIssues);
+        setStats(cachedStats || null);
+        setLoadError('Loaded from offline cache (weak or disconnected network).');
+      } else {
+        setLoadError('We could not load community issues right now. Please check your connection.');
+      }
     } finally {
       setLoading(false);
     }

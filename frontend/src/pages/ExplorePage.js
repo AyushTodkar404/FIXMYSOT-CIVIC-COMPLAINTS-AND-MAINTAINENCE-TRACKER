@@ -12,6 +12,7 @@ import { MapBasemapControl } from '../components/MapBasemapControl';
 import { MapContainer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { useTheme } from 'next-themes';
+import { offlineCache } from '../lib/networkResilience';
 
 const createCustomIcon = (color) => {
   return L.divIcon({
@@ -54,9 +55,17 @@ export const ExplorePage = () => {
   const fetchCategories = async () => {
     try {
       const { data } = await axios.get(`${BACKEND_URL}/api/categories`);
-      setCategories(data);
-    } catch (error) {
-      console.error('Failed to fetch categories:', error);
+      if (Array.isArray(data) && data.length > 0) {
+        setCategories(data);
+        offlineCache.set('categories', data);
+      }
+    } catch {
+      const cached = offlineCache.get('categories');
+      if (cached) {
+        setCategories(cached);
+      } else {
+        setCategories(['Roads', 'Garbage', 'Streetlights', 'Water Supply', 'Sewage', 'Electricity', 'Parks & Public Spaces', 'Traffic & Transport', 'Public Health', 'Other']);
+      }
     }
   };
 
@@ -72,8 +81,22 @@ export const ExplorePage = () => {
         withCredentials: true
       });
       setIssues(data);
+      if (!filters.status && !filters.category && !filters.search) {
+        offlineCache.set('all_issues', data);
+      }
     } catch (error) {
-      console.error('Failed to fetch issues:', error);
+      console.warn('Network issue fetching issues, recovering from offline cache:', error);
+      const cached = offlineCache.get('all_issues');
+      if (cached && Array.isArray(cached)) {
+        let filtered = [...cached];
+        if (filters.category) filtered = filtered.filter(i => i.category === filters.category);
+        if (filters.status) filtered = filtered.filter(i => i.status === filters.status);
+        if (filters.search) {
+          const q = filters.search.toLowerCase();
+          filtered = filtered.filter(i => (i.title || '').toLowerCase().includes(q) || (i.address || '').toLowerCase().includes(q));
+        }
+        setIssues(filtered);
+      }
     } finally {
       setLoading(false);
     }

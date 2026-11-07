@@ -19,6 +19,7 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { ProfilePage } from './pages/ProfilePage';
 import { Toaster } from './components/ui/sonner';
 import { ThemeProvider } from 'next-themes';
+import { NetworkStatusBanner } from './components/NetworkStatusBanner';
 
 function AppRouter() {
   const location = useLocation();
@@ -30,6 +31,7 @@ function AppRouter() {
 
   return (
     <>
+      <NetworkStatusBanner />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />

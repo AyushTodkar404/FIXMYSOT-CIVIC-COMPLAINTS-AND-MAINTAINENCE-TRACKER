@@ -8,6 +8,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { StatusUpdateModal } from '../components/StatusUpdateModal';
 import { VerticalTimeline } from '../components/VerticalTimeline';
 import { STATUS_LIST } from '../utils/statusUtils';
+import { offlineCache } from '../lib/networkResilience';
 
 export const MunicipalDashboard = () => {
   const { user } = useAuth();
@@ -49,6 +50,9 @@ export const MunicipalDashboard = () => {
         withCredentials: true
       });
       setIssues(data);
+      if (filter === 'all') {
+        offlineCache.set('municipal_issues', data);
+      }
 
       // Refresh timeline modal if selected
       if (selectedIssueForTimeline) {
@@ -56,7 +60,15 @@ export const MunicipalDashboard = () => {
         if (updatedSelected) setSelectedIssueForTimeline(updatedSelected);
       }
     } catch (error) {
-      console.error('Failed to fetch issues:', error);
+      console.warn('Network issue fetching municipal issues, attempting offline cache:', error);
+      const cached = offlineCache.get('municipal_issues');
+      if (cached && Array.isArray(cached)) {
+        let filtered = [...cached];
+        if (filter !== 'all') {
+          filtered = filtered.filter(i => i.status === filter);
+        }
+        setIssues(filtered);
+      }
     } finally {
       setLoading(false);
     }

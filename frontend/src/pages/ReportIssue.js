@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
 import { MapBasemapControl } from '../components/MapBasemapControl';
 
+import { offlineCache } from '../lib/networkResilience';
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -18,12 +20,14 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+const DEFAULT_CATEGORIES = ['Roads', 'Garbage', 'Streetlights', 'Water Supply', 'Sewage', 'Electricity', 'Parks & Public Spaces', 'Traffic & Transport', 'Public Health', 'Other'];
+
 export const ReportIssue = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { resolvedTheme } = useTheme();
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -48,9 +52,17 @@ export const ReportIssue = () => {
   const fetchCategories = async () => {
     try {
       const { data } = await axios.get(`${BACKEND_URL}/api/categories`);
-      setCategories(data);
-    } catch (error) {
-      console.error('Failed to fetch categories:', error);
+      if (Array.isArray(data) && data.length > 0) {
+        setCategories(data);
+        offlineCache.set('categories', data);
+      }
+    } catch {
+      const cached = offlineCache.get('categories');
+      if (cached && Array.isArray(cached) && cached.length > 0) {
+        setCategories(cached);
+      } else {
+        setCategories(DEFAULT_CATEGORIES);
+      }
     }
   };
 
@@ -74,13 +86,17 @@ export const ReportIssue = () => {
 
   const reverseGeocode = async (lat, lng) => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+        { signal: controller.signal }
       );
+      clearTimeout(timeoutId);
       const data = await response.json();
-      setFormData(prev => ({ ...prev, address: data.display_name }));
-    } catch (error) {
-      console.error('Geocoding error:', error);
+      setFormData(prev => ({ ...prev, address: data.display_name || `Location (${lat.toFixed(4)}, ${lng.toFixed(4)})` }));
+    } catch {
+      setFormData(prev => ({ ...prev, address: prev.address || `GPS coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}` }));
     }
   };
 
@@ -118,20 +134,26 @@ export const ReportIssue = () => {
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
-          const maxWidth = 1280;
-          const maxHeight = 1280;
+          // Adapt dimensions and compression quality according to cellular network condition
+          const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+          const isWeak = navigator.onLine === false ||
+            ['slow-2g', '2g', '3g'].includes(conn?.effectiveType) ||
+            conn?.saveData;
+          const maxDim = isWeak ? 900 : 1280;
+          const quality = isWeak ? 0.65 : 0.8;
+
           let width = img.width;
           let height = img.height;
 
           if (width > height) {
-            if (width > maxWidth) {
-              height = Math.round((height * maxWidth) / width);
-              width = maxWidth;
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
             }
           } else {
-            if (height > maxHeight) {
-              width = Math.round((width * maxHeight) / height);
-              height = maxHeight;
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
             }
           }
 
@@ -140,7 +162,7 @@ export const ReportIssue = () => {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.8));
+          resolve(canvas.toDataURL('image/jpeg', quality));
         };
         img.onerror = reject;
         img.src = event.target.result;
@@ -347,10 +369,22 @@ export const ReportIssue = () => {
               {/* Image Uploader input */}
               <div>
                 <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-2">Upload Photos (Max 5)</label>
-                <div className="flex items-center space-x-4">
-                  <label className="cursor-pointer px-4 py-2.5 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-850 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-900 font-bold text-xs rounded-xl transition-all duration-200 flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="cursor-pointer px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 font-bold text-xs rounded-xl transition-all duration-200 flex items-center space-x-2">
                     <PhosphorIcons.Camera size={16} weight="bold" />
-                    <span>Select Images</span>
+                    <span>Take Photo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      data-testid="camera-upload"
+                    />
+                  </label>
+                  <label className="cursor-pointer px-4 py-2.5 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-850 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-900 font-bold text-xs rounded-xl transition-all duration-200 flex items-center space-x-2">
+                    <PhosphorIcons.Image size={16} weight="bold" />
+                    <span>Choose Gallery</span>
                     <input
                       type="file"
                       multiple

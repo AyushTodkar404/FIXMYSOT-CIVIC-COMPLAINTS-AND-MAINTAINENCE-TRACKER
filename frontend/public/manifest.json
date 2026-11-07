@@ -1,0 +1,21 @@
+{
+  "short_name": "FixMySpot",
+  "name": "Fix My Spot - Civic Maintenance Tracker",
+  "description": "Report civic issues, track municipal repairs, and empower communities.",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#166534",
+  "background_color": "#FAFAF9",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["utilities", "government", "social"]
+}

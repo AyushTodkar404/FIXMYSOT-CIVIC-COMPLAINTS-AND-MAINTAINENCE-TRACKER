@@ -9,6 +9,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { VerticalTimeline } from '../components/VerticalTimeline';
 import { IssueImageComparison } from '../components/IssueImageComparison';
 import { STATUS_LIST } from '../utils/statusUtils';
+import { offlineCache } from '../lib/networkResilience';
 
 export const MyIssues = () => {
   const { user } = useAuth();
@@ -59,6 +60,9 @@ export const MyIssues = () => {
         signal: abortControllerRef.current.signal
       });
       setIssues(data);
+      if (filter === 'all') {
+        offlineCache.set('my_issues', data);
+      }
 
       if (selectedIssue) {
         const updated = data.find(i => i.id === selectedIssue.id);
@@ -66,8 +70,15 @@ export const MyIssues = () => {
       }
     } catch (error) {
       if (error.name !== 'AbortError') {
-        console.error('Failed to fetch issues:', error);
-        toast.error(error.response?.data?.detail || 'Failed to load issues. Please try again.');
+        console.warn('Network issue fetching my issues, using offline cache:', error);
+        const cached = offlineCache.get('my_issues');
+        if (cached && Array.isArray(cached)) {
+          let filtered = [...cached];
+          if (filter !== 'all') filtered = filtered.filter(i => i.status === filter);
+          setIssues(filtered);
+        } else {
+          toast.error('Unable to fetch your issues right now. Please check your connection.');
+        }
       }
     } finally {
       setLoading(false);

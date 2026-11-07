@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import * as PhosphorIcons from '@phosphor-icons/react';
 import { Navbar } from '../components/Navbar';
+import { offlineCache } from '../lib/networkResilience';
 
 export const Leaderboard = () => {
   const { t } = useTranslation();
@@ -21,8 +22,13 @@ export const Leaderboard = () => {
         withCredentials: true
       });
       setLeaderboard(data);
+      offlineCache.set('leaderboard', data);
     } catch (error) {
-      console.error('Failed to fetch leaderboard:', error);
+      console.warn('Network issue fetching leaderboard, using cache:', error);
+      const cached = offlineCache.get('leaderboard');
+      if (cached && Array.isArray(cached)) {
+        setLeaderboard(cached);
+      }
     } finally {
       setLoading(false);
     }
