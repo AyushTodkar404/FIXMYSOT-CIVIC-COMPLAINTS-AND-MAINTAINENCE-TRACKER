@@ -175,6 +175,11 @@ code {
     color: #f5f5f4;
 }
 
+/* Dark mode filter for keyless OpenStreetMap tiles */
+.map-tiles-dark {
+    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
 .microphone-pulse {
     animation: pulse 1.5s ease-in-out infinite;
 }

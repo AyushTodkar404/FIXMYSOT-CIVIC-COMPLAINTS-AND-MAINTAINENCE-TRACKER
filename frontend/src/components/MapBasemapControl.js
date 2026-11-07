@@ -3,17 +3,30 @@ import { LayersControl, TileLayer } from 'react-leaflet';
 
 const { BaseLayer } = LayersControl;
 
-// Shared layers keep every interactive map consistent without exposing a map API key.
+// Shared keyless basemaps using official OpenStreetMap and Esri World Imagery (zero API keys required).
 export const MapBasemapControl = ({ isDark = false }) => (
-  <LayersControl position="topright">
+  <LayersControl key={isDark ? 'dark-basemap' : 'light-basemap'} position="topright">
     <BaseLayer checked={!isDark} name="Street map">
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution="&copy; OpenStreetMap contributors &copy; CARTO" maxZoom={20} />
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        maxZoom={19}
+      />
     </BaseLayer>
     <BaseLayer checked={isDark} name="Dark detail">
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution="&copy; OpenStreetMap contributors &copy; CARTO" maxZoom={20} />
+      <TileLayer
+        className="map-tiles-dark"
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        maxZoom={19}
+      />
     </BaseLayer>
     <BaseLayer name="Satellite">
-      <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" attribution="Tiles &copy; Esri" maxZoom={19} />
+      <TileLayer
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        attribution="Tiles &copy; Esri"
+        maxZoom={19}
+      />
     </BaseLayer>
   </LayersControl>
 );
