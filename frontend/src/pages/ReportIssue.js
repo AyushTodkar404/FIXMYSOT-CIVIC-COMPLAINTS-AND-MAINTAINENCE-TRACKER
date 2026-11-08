@@ -20,7 +20,18 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const DEFAULT_CATEGORIES = ['Roads', 'Garbage', 'Streetlights', 'Water Supply', 'Sewage', 'Electricity', 'Parks & Public Spaces', 'Traffic & Transport', 'Public Health', 'Other'];
+const DEFAULT_CATEGORIES = [
+  { id: 'pothole', name: 'Pothole' },
+  { id: 'garbage', name: 'Garbage' },
+  { id: 'streetlight', name: 'Street Light' },
+  { id: 'sewage', name: 'Sewage' },
+  { id: 'water', name: 'Water Supply' },
+  { id: 'electrical', name: 'Electrical' },
+  { id: 'road', name: 'Road Damage' },
+  { id: 'park', name: 'Park Maintenance' },
+  { id: 'noise', name: 'Noise Pollution' },
+  { id: 'other', name: 'Other' },
+];
 
 export const ReportIssue = () => {
   const { user } = useAuth();
@@ -90,7 +101,10 @@ export const ReportIssue = () => {
       const timeoutId = setTimeout(() => controller.abort(), 4000);
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
-        { signal: controller.signal }
+        {
+          signal: controller.signal,
+          headers: { 'Accept': 'application/json' }
+        }
       );
       clearTimeout(timeoutId);
       const data = await response.json();
@@ -394,7 +408,7 @@ export const ReportIssue = () => {
                       data-testid="image-upload"
                     />
                   </label>
-                  <span className="text-xs font-semibold text-stone-400 dark:text-stone-500">{formData.photos.length} of 5 uploaded</span>
+                  <span className="text-xs font-semibold text-stone-600 dark:text-stone-400">{formData.photos.length} of 5 uploaded</span>
                 </div>
                 
                 {imagePreviews.length > 0 && (
@@ -405,9 +419,10 @@ export const ReportIssue = () => {
                         <button
                           type="button"
                           onClick={() => removeImage(index)}
-                          className="absolute -top-1.5 -right-1.5 bg-red-650 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md"
+                          aria-label={`Remove photo ${index + 1}`}
+                          className="absolute -top-2 -right-2 min-w-[24px] min-h-[24px] flex items-center justify-center bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-200 shadow-md"
                         >
-                          <PhosphorIcons.X size={10} weight="bold" />
+                          <PhosphorIcons.X size={12} weight="bold" />
                         </button>
                       </div>
                     ))}

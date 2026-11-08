@@ -478,6 +478,7 @@ async def register(user: UserRegister, response: Response):
         "badges": [],
         "created_at": user_doc["created_at"].isoformat(),
         "updated_at": user_doc["updated_at"].isoformat(),
+        "access_token": access_token,
     }
 
 @api_router.post("/auth/login")
@@ -521,7 +522,9 @@ async def login(credentials: UserLogin, request: Request, response: Response):
         secure=is_cookie_secure(), samesite="lax", max_age=604800, path="/"
     )
     
-    return serialize_user(user)
+    user_data = serialize_user(user)
+    user_data["access_token"] = access_token
+    return user_data
 
 @api_router.post("/auth/logout")
 async def logout(response: Response):
@@ -645,7 +648,9 @@ async def google_session(request: Request, response: Response):
             )
             
             user = await db.users.find_one({"id": user_id})
-            return serialize_user(user)
+            user_data = serialize_user(user)
+            user_data["access_token"] = access_token
+            return user_data
             
     except Exception as e:
         logger.error(f"Google auth error: {str(e)}")
@@ -676,7 +681,7 @@ async def create_municipal_worker(worker: MunicipalWorkerCreate, current_user: d
     return serialize_user(user_doc)
 
 @api_router.patch("/admin/municipal-workers/{worker_id}")
-async def update_municipal_worker(worker_id: str, worker: MunicipalWorkerUpdate, current_user: dict = Depends(require_admin)):
+async def update_municipal_worker(worker_id: str, worker: MunicipalWorkerUpdate, current_user: dict = Depends(require_admin_passkey)):
     existing = await db.users.find_one({"id": worker_id, "role": "municipal"})
     if not existing:
         raise HTTPException(status_code=404, detail="Municipal worker not found")
@@ -700,7 +705,7 @@ async def update_municipal_worker(worker_id: str, worker: MunicipalWorkerUpdate,
     return serialize_user(updated)
 
 @api_router.delete("/admin/municipal-workers/{worker_id}")
-async def delete_municipal_worker(worker_id: str, current_user: dict = Depends(require_admin)):
+async def delete_municipal_worker(worker_id: str, current_user: dict = Depends(require_admin_passkey)):
     result = await db.users.delete_one({"id": worker_id, "role": "municipal"})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Municipal worker not found")
@@ -1006,7 +1011,7 @@ async def create_comment(issue_id: str, comment: CommentCreate, current_user: di
     }
 
 @api_router.get("/issues/{issue_id}/comments")
-async def get_comments(issue_id: str):
+async def get_comments(issue_id: str, current_user: dict = Depends(get_current_user)):
     comments = await db.comments.find({"issue_id": issue_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
     for comment in comments:
         if isinstance(comment.get("created_at"), datetime):
@@ -1017,12 +1022,16 @@ async def get_comments(issue_id: str):
 @api_router.post("/voice/transcribe")
 async def transcribe_voice(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
     try:
-        audio_data = await file.read()
+        # Enforce max 10MB audio size to prevent memory exhaustion DoS
+        MAX_AUDIO_SIZE = 10 * 1024 * 1024
+        audio_data = await file.read(MAX_AUDIO_SIZE + 1)
+        if len(audio_data) > MAX_AUDIO_SIZE:
+            raise HTTPException(status_code=413, detail="Audio file exceeds the 10MB limit")
         
         # Create a temporary file-like object
         import io
         audio_file = io.BytesIO(audio_data)
-        audio_file.name = file.filename
+        audio_file.name = file.filename or "recording.webm"
         
         response = await stt.audio.transcriptions.create(
             file=audio_file,
@@ -1031,6 +1040,8 @@ async def transcribe_voice(file: UploadFile = File(...), current_user: dict = De
         )
         
         return {"text": response.text}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Voice transcription error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
@@ -1170,7 +1181,7 @@ async def get_my_stats(current_user: dict = Depends(get_current_user)):
     issues_count = await db.issues.count_documents({"created_by": current_user["id"]})
     resolved_count = await db.issues.count_documents({
         "created_by": current_user["id"],
-        "status": "resolved"
+        "status": {"$in": ["Closed", "resolved", "Work Completed"]}
     })
     
     return {

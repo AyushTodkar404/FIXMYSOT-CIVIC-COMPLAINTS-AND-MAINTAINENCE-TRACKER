@@ -31,22 +31,26 @@ export const AdminDashboard = () => {
   const reset = () => { setForm(emptyForm); setEditingId(null); setError(''); setRequiresPasskey(false); setAdminPasskey(''); };
   const submit = async (event) => {
     event.preventDefault(); setError('');
+    const authHeaders = adminPasskey ? { 'X-Admin-Passkey': adminPasskey } : undefined;
     try {
       if (editingId) {
         const payload = { ...form };
         if (!payload.password) delete payload.password;
-        await axios.patch(`${BACKEND_URL}/api/admin/municipal-workers/${editingId}`, payload, request);
+        await axios.patch(`${BACKEND_URL}/api/admin/municipal-workers/${editingId}`, payload, {
+          ...request,
+          headers: authHeaders,
+        });
       } else {
         await axios.post(`${BACKEND_URL}/api/admin/municipal-workers`, form, {
           ...request,
-          headers: adminPasskey ? { 'X-Admin-Passkey': adminPasskey } : undefined,
+          headers: authHeaders,
         });
       }
       reset(); await loadWorkers();
     } catch (err) {
       if (err.response?.data?.detail?.code === 'admin_passkey_required') {
         setRequiresPasskey(true);
-        setError('Confirm your administrator passkey to create this worker.');
+        setError('Confirm your administrator passkey to save this worker.');
       } else {
         setError(err.response?.data?.detail || 'Unable to save municipal worker.');
       }
@@ -59,8 +63,17 @@ export const AdminDashboard = () => {
   };
   const remove = async (id) => {
     if (!window.confirm('Delete this municipal worker account?')) return;
-    try { await axios.delete(`${BACKEND_URL}/api/admin/municipal-workers/${id}`, request); await loadWorkers(); }
-    catch (err) { setError(err.response?.data?.detail || 'Unable to delete municipal worker.'); }
+    const passkey = adminPasskey || window.prompt('Enter administrator passkey to confirm deletion:');
+    if (!passkey) return;
+    try {
+      await axios.delete(`${BACKEND_URL}/api/admin/municipal-workers/${id}`, {
+        ...request,
+        headers: { 'X-Admin-Passkey': passkey },
+      });
+      await loadWorkers();
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Unable to delete municipal worker.');
+    }
   };
 
   return (
@@ -154,7 +167,7 @@ export const AdminDashboard = () => {
                 </select>
               </div>
 
-              {!editingId && requiresPasskey && (
+              {requiresPasskey && (
                 <div>
                   <label className="block text-xs font-semibold text-red-700 dark:text-red-400 mb-1.5">
                     Administrator Passkey Required

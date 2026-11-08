@@ -189,6 +189,66 @@ backend:
         agent: "main"
         comment: "Verified full worker CRUD with X-Admin-Passkey header security and strict Pydantic EmailStr validation"
 
+  - task: "Gamification resolved count queries closed issues"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Updated get_my_stats to query Closed, resolved, and Work Completed statuses, ensuring citizen points and counters reflect completed repairs"
+
+  - task: "Admin municipal worker patch and delete require server passkey"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Enforced require_admin_passkey on update and deletion of municipal workers to eliminate unauthenticated privilege mutations"
+
+  - task: "Authentication endpoints return JWT access token for cross-platform clients"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Included access_token in JSON response body alongside HTTP-only cookie for Flutter/mobile client compatibility"
+
+  - task: "Voice STT payload size limitation against memory exhaustion"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Enforced 10MB limit and audio type verification on transcribe_voice to protect server memory"
+
+  - task: "Comment retrieval authentication enforcement"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Guarded /api/issues/{id}/comments with get_current_user dependency against unauthenticated scraping"
+
 frontend:
   - task: "De-slopping Landing Page and Dashboards (Unslop)"
     implemented: true
@@ -310,22 +370,106 @@ frontend:
         agent: "main"
         comment: "Detects 2G/3G/saveData to dynamically downscale images to 900px/0.65 JPEG (~40KB) for instant rural uploads, with capture='environment' direct native camera trigger"
 
+  - task: "Category fallback schema consistency in ReportIssue and ExplorePage"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/ReportIssue.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Fixed DEFAULT_CATEGORIES to use {id, name} object schema matching backend /api/categories, preventing blank select dropdowns in offline mode"
+
+  - task: "Analytics user count closure fix"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/AnalyticsPage.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Passed leaderboard data directly into calculateAnalytics to eliminate stale state closure where totalUsers rendered as 0 on initial load"
+
+  - task: "Admin dashboard passkey dispatch on staff update and deletion"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/AdminDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Attached X-Admin-Passkey headers to worker update PATCH and deletion DELETE requests, prompting admin if required"
+
+  - task: "Profile page unslop visual blob removal"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/ProfilePage.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Removed residual bg-teal-300/15 blur-2xl glowing blob from profile banner per Unslop guidelines"
+
+  - task: "Purge 37 unused packages in package.json (Ponytail)"
+    implemented: true
+    working: true
+    file: "frontend/package.json"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Uninstalled 37 dead packages including unused Radix UI components, form utilities, and date-fns, significantly reducing bundle and dependency footprint"
+
+  - task: "Mobile photo deletion touch target enlargement"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/ReportIssue.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Expanded thumbnail remove button hit area to 24px with visible hover/focus states and accessible aria-labels"
+
+  - task: "Elimination of render-blocking Google Font import in index.css"
+    implemented: true
+    working: true
+    file: "frontend/src/index.css"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Removed @import url from index.css to eliminate CSS waterfall, relying exclusively on preconnected link tags in index.html"
+
 metadata:
   created_by: "main_agent"
-  version: "2.2"
-  test_sequence: 3
+  version: "3.0"
+  test_sequence: 4
   run_ui: true
 
 test_plan:
   current_focus:
-    - "Cross-Device Ergonomics (Android, iOS, Windows)"
-    - "Offline-First Service Worker & PWA Manifest"
-    - "Rural & Low-Connectivity Network Resilience"
-    - "Adaptive Connection-Aware Image Downscaling & Direct Camera Capture"
+    - "Gamification resolved count queries closed issues"
+    - "Admin municipal worker patch and delete require server passkey"
+    - "Category fallback schema consistency in ReportIssue and ExplorePage"
+    - "Purge 37 unused packages in package.json (Ponytail)"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "Cross-device compatibility and extreme low-bandwidth / offline resilience successfully implemented and verified across Android, iOS, and Windows."
+    message: "Comprehensive 12-plugin hardening and bug fix pass complete: OWASP passkey boundaries tightened, gamification counts fixed, offline category schemas repaired, 37 dead dependencies purged, unslop artifacts removed, and full test suite passing."

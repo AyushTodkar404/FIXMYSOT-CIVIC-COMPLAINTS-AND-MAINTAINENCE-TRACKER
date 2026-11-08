@@ -73,7 +73,6 @@ export const ProfilePage = () => {
     <Navbar />
     <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-700 px-6 py-8 sm:p-10 text-white shadow-xl">
-        <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-teal-300/15 blur-2xl" />
         <div className="relative flex flex-col sm:flex-row gap-6 sm:items-center">
           <button onClick={() => uploadRef.current?.click()} className="group relative h-24 w-24 shrink-0 overflow-hidden rounded-3xl border-2 border-white/60 bg-emerald-950 text-3xl font-black shadow-lg" aria-label="Change profile picture">
             {avatar ? <img src={avatar} alt="Profile" className="h-full w-full object-cover" /> : initialsFor(user?.name)}

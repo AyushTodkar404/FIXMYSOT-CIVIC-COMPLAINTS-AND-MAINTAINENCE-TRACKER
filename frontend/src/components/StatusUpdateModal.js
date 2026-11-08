@@ -14,7 +14,7 @@ export const StatusUpdateModal = ({ issue, onClose, onSuccess }) => {
   const [submitting, setSubmitting] = useState(false);
 
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-  const requiresProof = useMemo(() => ['Work Completed', 'Citizen Verification Pending', 'Closed', 'resolved', 'resolved'].includes(status), [status]);
+  const requiresProof = useMemo(() => ['Work Completed', 'Citizen Verification Pending', 'Closed', 'resolved'].includes(status), [status]);
 
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files || []);

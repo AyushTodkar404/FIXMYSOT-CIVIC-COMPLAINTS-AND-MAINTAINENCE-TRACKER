@@ -64,7 +64,18 @@ export const ExplorePage = () => {
       if (cached) {
         setCategories(cached);
       } else {
-        setCategories(['Roads', 'Garbage', 'Streetlights', 'Water Supply', 'Sewage', 'Electricity', 'Parks & Public Spaces', 'Traffic & Transport', 'Public Health', 'Other']);
+        setCategories([
+          { id: 'pothole', name: 'Pothole' },
+          { id: 'garbage', name: 'Garbage' },
+          { id: 'streetlight', name: 'Street Light' },
+          { id: 'sewage', name: 'Sewage' },
+          { id: 'water', name: 'Water Supply' },
+          { id: 'electrical', name: 'Electrical' },
+          { id: 'road', name: 'Road Damage' },
+          { id: 'park', name: 'Park Maintenance' },
+          { id: 'noise', name: 'Noise Pollution' },
+          { id: 'other', name: 'Other' }
+        ]);
       }
     }
   };

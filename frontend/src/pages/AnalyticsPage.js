@@ -35,7 +35,7 @@ export const AnalyticsPage = () => {
 
       setIssues(issuesRes.data);
       setUsers(leaderboardRes.data);
-      calculateAnalytics(issuesRes.data);
+      calculateAnalytics(issuesRes.data, leaderboardRes.data);
     } catch (error) {
       console.error('Failed to fetch data:', error);
       toast.error('Failed to load analytics');
@@ -44,7 +44,7 @@ export const AnalyticsPage = () => {
     }
   };
 
-  const calculateAnalytics = (issuesData) => {
+  const calculateAnalytics = (issuesData, usersData = []) => {
     // Stage distribution
     const submittedCount = issuesData.filter(i => ['Submitted', 'pending'].includes(i.status)).length;
     const verifiedCount = issuesData.filter(i => i.status === 'Verified').length;
@@ -106,7 +106,7 @@ export const AnalyticsPage = () => {
       timelineData: last7Days,
       avgResolutionTime,
       totalIssues: issuesData.length,
-      totalUsers: users.length,
+      totalUsers: (usersData && usersData.length) ? usersData.length : users.length,
       resolutionRate: issuesData.length > 0 ? ((totalClosed / issuesData.length) * 100).toFixed(1) : 0
     });
   };

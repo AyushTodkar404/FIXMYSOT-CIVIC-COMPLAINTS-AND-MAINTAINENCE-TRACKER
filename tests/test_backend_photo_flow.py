@@ -224,3 +224,52 @@ async def test_database_diagnostics_staff_authorization(monkeypatch):
     assert admin_diag["collections"] == 6
     assert admin_diag["total_indexes"] == 22
 
+
+@pytest.mark.asyncio
+async def test_get_my_stats_counts_closed_and_resolved(monkeypatch):
+    """Verify that get_my_stats counts Closed, resolved, and Work Completed issues."""
+    fake_db = create_fake_db()
+    # Mock count_documents: first call is total issues, second call is resolved issues
+    call_counts = []
+    async def mock_count_documents(query):
+        call_counts.append(query)
+        if "status" in query:
+            return 3
+        return 5
+
+    fake_db.issues.count_documents = mock_count_documents
+    monkeypatch.setattr(server, "db", fake_db)
+
+    stats = await server.get_my_stats(
+        current_user={"id": "citizen-1", "role": "citizen", "points": 50, "badges": ["Active Citizen"]}
+    )
+    assert stats["issues_reported"] == 5
+    assert stats["issues_resolved"] == 3
+    # Verify the status query used includes "Closed"
+    assert "Closed" in call_counts[1]["status"]["$in"]
+
+
+@pytest.mark.asyncio
+async def test_require_admin_passkey_enforcement(monkeypatch):
+    """Verify require_admin_passkey rejects requests without or with invalid passkey."""
+    from starlette.requests import Request
+    monkeypatch.setenv("ADMIN_PASSKEY", "secret-passkey-xyz")
+
+    # Missing header
+    req_missing = Request({"type": "http", "headers": []})
+    with pytest.raises(HTTPException) as exc1:
+        await server.require_admin_passkey(req_missing, current_user={"role": "admin"})
+    assert exc1.value.status_code == 401
+
+    # Wrong header
+    req_wrong = Request({"type": "http", "headers": [(b"x-admin-passkey", b"wrong")]})
+    with pytest.raises(HTTPException) as exc2:
+        await server.require_admin_passkey(req_wrong, current_user={"role": "admin"})
+    assert exc2.value.status_code == 403
+
+    # Correct header
+    req_valid = Request({"type": "http", "headers": [(b"x-admin-passkey", b"secret-passkey-xyz")]})
+    result = await server.require_admin_passkey(req_valid, current_user={"role": "admin"})
+    assert result["role"] == "admin"
+
+
