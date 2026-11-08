@@ -24,7 +24,9 @@ body {
 }
 
 /* Eliminate horizontal scrolling and hide scrollbar lines across all browsers */
-html, body, * {
+html,
+body,
+* {
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
 }
@@ -35,7 +37,12 @@ html, body, * {
     height: 0 !important;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-family: 'Outfit', sans-serif;
 }
 
@@ -72,6 +79,7 @@ code {
     * {
         @apply border-border;
     }
+
     body {
         @apply bg-[#FAFAF9] dark:bg-stone-950 text-stone-900 dark:text-stone-100 transition-colors duration-200;
     }
@@ -82,7 +90,7 @@ code {
         display: contents !important;
     }
 
-    [data-debug-wrapper="true"] > * {
+    [data-debug-wrapper="true"]>* {
         margin-left: inherit;
         margin-right: inherit;
         margin-top: inherit;
@@ -184,10 +192,13 @@ code {
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
         opacity: 1;
     }
+
     50% {
         transform: scale(1.1);
         opacity: 0.8;
@@ -195,9 +206,12 @@ code {
 }
 
 @keyframes bounce-slow {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0);
     }
+
     50% {
         transform: translateY(-8px);
     }
@@ -212,6 +226,7 @@ code {
         opacity: 0;
         transform: translateY(4px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -248,7 +263,10 @@ body {
 /* Crucial iOS Safari fix: inputs smaller than 16px force Safari to auto-zoom in,
    disorienting mobile users. Setting min 16px on mobile prevents automatic viewport zooming. */
 @media screen and (max-width: 768px) {
-    input, select, textarea {
+
+    input,
+    select,
+    textarea {
         font-size: 16px !important;
     }
 }
@@ -258,4 +276,3 @@ body {
     min-height: 100vh;
     min-height: 100dvh;
 }
-
