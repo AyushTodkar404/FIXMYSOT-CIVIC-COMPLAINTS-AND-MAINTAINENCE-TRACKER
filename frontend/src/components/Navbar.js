@@ -50,9 +50,11 @@ export const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Brand Logo */}
           <Link to="/" className="flex items-center space-x-2.5 group" data-testid="logo-link">
-            <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 rounded-xl group-hover:bg-emerald-800 dark:group-hover:bg-emerald-700 group-hover:text-white transition-all duration-300">
-              <PhosphorIcons.MapPin size={22} weight="duotone" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Fix My Spot Logo"
+              className="w-9 h-9 rounded-xl object-contain shadow-sm border border-emerald-500/20 group-hover:scale-105 transition-transform duration-300"
+            />
             <span className="text-lg sm:text-xl font-extrabold text-stone-900 dark:text-white tracking-tight group-hover:text-emerald-800 dark:group-hover:text-emerald-400 transition-colors duration-300">
               Fix My Spot
             </span>
